@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d61baa6d_d6c8c851",
+        "filename": "client/swarming.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1421,
+      "author": {
+        "id": 1000487
+      },
+      "writtenOn": "2018-04-30T19:47:16Z",
+      "side": 1,
+      "message": "I\u0027m particularly interested to the content in case of HTTP 400. I\u0027m fine with special casing this code, as this would be printed to stdout instead of stderr.",
+      "revId": "9abf216477a761ab17fef61c05abbc1cb2e1aeeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5676972e_69d9128f",
+        "filename": "client/swarming.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1430,
+      "author": {
+        "id": 1000487
+      },
+      "writtenOn": "2018-04-30T19:47:16Z",
+      "side": 1,
+      "message": "This would go away?",
+      "revId": "9abf216477a761ab17fef61c05abbc1cb2e1aeeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "712f5b1b_ef9da81b",
+        "filename": "client/utils/net.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000487
+      },
+      "writtenOn": "2018-04-30T19:47:16Z",
+      "side": 1,
+      "message": "I\u0027d probably have done:\nif kwargs.get(\u0027raise_on_error\u0027):\n\nbut it\u0027s fine.",
+      "revId": "9abf216477a761ab17fef61c05abbc1cb2e1aeeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "746d4085_3850a8fe",
+        "filename": "client/utils/net.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000487
+      },
+      "writtenOn": "2018-04-30T19:47:16Z",
+      "side": 1,
+      "message": "why not just raise so the original location is raised?",
+      "revId": "9abf216477a761ab17fef61c05abbc1cb2e1aeeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2efae773_67832ea4",
+        "filename": "client/utils/net.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1000487
+      },
+      "writtenOn": "2018-04-30T19:47:16Z",
+      "side": 1,
+      "message": "Optional: Same for kwargs.get(\u0027raise_on_error\u0027) and naked raise, which reduces the delta significantly.",
+      "revId": "9abf216477a761ab17fef61c05abbc1cb2e1aeeb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
