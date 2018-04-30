@@ -1416,12 +1416,18 @@ def CMDpost(parser, args):
   url = options.swarming + '/api/swarming/v1/' + args[0]
   data = sys.stdin.read()
   try:
-    resp = net.url_read(url, data=data, method='POST')
+    resp = net.url_read(url, data=data, method='POST', raise_on_error=True)
+  except net.HttpError as e:
+    print >> sys.stderr, e.description()
+    return 1
   except net.TimeoutError:
-    sys.stderr.write('Timeout!\n')
+    print >> sys.stderr, 'Timeout!'
+    return 1
+  except net.NetError as e:
+    print >> sys.stderr, e
     return 1
   if not resp:
-    sys.stderr.write('No response!\n')
+    print >> sys.stderr, 'No response!'
     return 1
   sys.stdout.write(resp)
   return 0
