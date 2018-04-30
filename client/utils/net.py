@@ -92,6 +92,10 @@ class ConnectionError(NetError):
   """Failed to connect to the server."""
 
 
+class MalformedResponseError(NetError):
+  """Server returned some response, but we can't parse it."""
+
+
 class HttpError(NetError):
   """Server returned HTTP error code.
 
@@ -197,23 +201,26 @@ def url_open(url, **kwargs):  # pylint: disable=W0621
   return service.request(urlpath, **kwargs)
 
 
-def url_read(url, **kwargs):
+def url_read(url, raise_on_error=False, **kwargs):
   """Attempts to open the given url multiple times and read all data from it.
 
   Accepts same arguments as url_open function.
 
   Returns all data read or None if it was unable to connect or read the data.
   """
-  response = url_open(url, stream=False, **kwargs)
+  response = url_open(
+      url, stream=False, raise_on_error=raise_on_error, **kwargs)
   if not response:
     return None
   try:
     return response.read()
-  except TimeoutError:
+  except TimeoutError as e:
+    if raise_on_error:
+      raise e
     return None
 
 
-def url_read_json(url, **kwargs):
+def url_read_json(url, raise_on_error=False, **kwargs):
   """Attempts to open the given url multiple times and read all data from it.
 
   Accepts same arguments as url_open function.
@@ -223,8 +230,11 @@ def url_read_json(url, **kwargs):
   urlhost, urlpath = split_server_request_url(url)
   service = get_http_service(urlhost)
   try:
-    return service.json_request(urlpath, **kwargs)
-  except TimeoutError:
+    return service.json_request(
+        urlpath, raise_on_error=raise_on_error, **kwargs)
+  except TimeoutError as e:
+    if raise_on_error:
+      raise e
     return None
 
 
@@ -424,7 +434,8 @@ class HttpService(object):
       stream=True,
       method=None,
       headers=None,
-      follow_redirects=True):
+      follow_redirects=True,
+      raise_on_error=False):
     """Attempts to open the given url multiple times.
 
     |urlpath| is relative to the server root, i.e. '/some/request?param=1'.
@@ -459,6 +470,10 @@ class HttpService(object):
     for more than |read_timeout| seconds. It can happen during any read
     operation so once you pass non-None |read_timeout| be prepared to handle
     these exceptions in subsequent reads from the stream.
+
+    If |raise_on_error| is True, will raise NetError exception on errors instead
+    of just logging them returning None. In particular, bad status codes from
+    the server are represented by HttpError subclass.
 
     Returns a file-like object, where the response may be read from, or None
     if it was unable to connect. If |stream| is False will read whole response
@@ -544,6 +559,8 @@ class HttpService(object):
             logging.error(
                 'Use auth.py to login if haven\'t done so already:\n'
                 '    python auth.py login --service=%s', self.urlhost)
+          if raise_on_error:
+            raise last_error
           return None
 
         # Hit a error that can not be retried -> stop retry loop.
@@ -555,6 +572,8 @@ class HttpService(object):
               'Request to %s failed with HTTP status code %d.\n%s',
               request.get_full_url(), e.response.code,
               e.description(verbose=True))
+          if raise_on_error:
+            raise last_error
           logging.error(
               'Request to %s failed with HTTP status code %d: %s',
               request.get_full_url(), e.response.code, e.description())
@@ -566,6 +585,9 @@ class HttpService(object):
             request.get_full_url(), attempt.attempt, e.description())
         continue
 
+    if raise_on_error:
+      raise last_error
+
     if isinstance(last_error, HttpError):
       error_msg = last_error.description(verbose=True)
     else:
@@ -573,15 +595,15 @@ class HttpService(object):
     logging.error(
         'Unable to open given url, %s, after %d attempts.\n%s',
         request.get_full_url(), max_attempts, error_msg)
-
     return None
 
-  def json_request(self, urlpath, data=None, **kwargs):
+  def json_request(self, urlpath, data=None, raise_on_error=False, **kwargs):
     """Sends JSON request to the server and parses JSON response it get back.
 
     Arguments:
       urlpath: relative request path (e.g. '/auth/v1/...').
       data: object to serialize to JSON and sent in the request.
+      raise_on_error: if True, will raise NetError on errors or timeouts.
 
     See self.request() for more details.
 
@@ -590,20 +612,33 @@ class HttpService(object):
     """
     content_type = JSON_CONTENT_TYPE if data is not None else None
     response = self.request(
-        urlpath, content_type=content_type, data=data, stream=False, **kwargs)
+        urlpath,
+        content_type=content_type,
+        data=data,
+        stream=False,
+        raise_on_error=raise_on_error,
+        **kwargs)
     if not response:
       return None
     try:
       text = response.read()
       if not text:
+        if raise_on_error:
+          raise MalformedResponseError('Empty JSON response from %s' % urlpath)
         return None
-    except TimeoutError:
+    except TimeoutError as e:
+      if raise_on_error:
+        raise e
       return None
     try:
       return json.loads(text)
     except ValueError as e:
-      logging.error('Not a JSON response when calling %s: %s; full text: %s',
-                    urlpath, e, text)
+      logging.error(
+          'Not a JSON response when calling %s: %s; full text: %s',
+          urlpath, e, text)
+      if raise_on_error:
+        raise MalformedResponseError(
+            'Bad JSON response from %s - %s' % (urlpath, e))
       return None
 
 
