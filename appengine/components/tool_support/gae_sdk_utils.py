@@ -19,12 +19,10 @@ import time
 yaml = None
 
 
-# If True, all code here will use gcloud SDK (not GAE SDK). It assumes 'gcloud'
-# tool is in PATH and the SDK has all necessary GAE components installed.
-#
-# This flag is temporary. Once gcloud support is fully implemented and gcloud is
-# available on bots, this will become the default.
-USE_GCLOUD = os.getenv('LUCI_PY_USE_GCLOUD') == '1'
+# If True (default!), all code here will use gcloud SDK (not GAE SDK). It
+# assumes 'gcloud' tool is in PATH and the SDK has all necessary GAE components
+# installed.
+USE_GCLOUD = os.getenv('LUCI_PY_USE_GCLOUD', '1') == '1'
 
 
 # Directory with this file.
